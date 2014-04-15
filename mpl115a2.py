@@ -92,7 +92,7 @@ class Mpl115a2:
         coeff = self._bus.read_i2c_block_data(self._addr,
                                               REG_COEFFICIENT_OFFSET)
         (a0, b1, b2, c12) = struct.unpack('>hhhh',
-                                          ''.join([chr(x) for x in reg]))
+                                          ''.join([chr(x) for x in coeff]))
         self._a0 = float(a0) / (1 << 3)
         self._b1 = float(b1) / (1 << 13)
         self._b2 = float(b2) / (1 << 14)
