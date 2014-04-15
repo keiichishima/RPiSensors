@@ -45,6 +45,15 @@ AKIZUKI DENSHI TSUSHO CO., LTD. as a part no. I-04596.  The smbus module
 is required.  This class is derived from Yojiro Uo's original code
 published at https://gist.github.com/yojiro/6995427.
 
+Example:
+
+import smbus
+import mpl115a2
+
+bus = smbus.SMBus(1)
+sensor = mpl115a2.Mpl115a2(bus)
+sensor.update()
+print sensor.pressure, sensor.temperature
 '''
 
 import struct
@@ -75,6 +84,8 @@ class Mpl115a2:
         self._b1 = None
         self._b2 = None
         self._c12 = None
+        self._pressure = None
+        self._temperature = None
         self._read_coefficient_offset()
 
     def _read_coefficient_offset(self):
