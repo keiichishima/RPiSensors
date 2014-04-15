@@ -78,11 +78,8 @@ class Mpl115a2:
         self._read_coefficient_offset()
 
     def _read_coefficient_offset(self):
-        reg = []
-        for i in range(8):
-            v = self._bus.read_byte_data(self._addr,
-                                         REG_COEFFICIENT_OFFSET + i)
-            reg.append(v)
+        coeff = self._bus.read_i2c_block_data(self._addr,
+                                              REG_COEFFICIENT_OFFSET)
         (a0, b1, b2, c12) = struct.unpack('>hhhh',
                                           ''.join([chr(x) for x in reg]))
         self._a0 = float(a0) / (1 << 3)
@@ -91,21 +88,18 @@ class Mpl115a2:
         self._c12 = float(c12 >> 2) / (1 << 22)
 
     def update(self):
-        self._bus.write_i2c_block_data(self._addr,
-                                       REG_START_CONVERSION,
-                                       [CMD_START_CONVERSION])
+        self._bus.write_byte_data(self._addr,
+                                  REG_START_CONVERSION,
+                                  CMD_START_CONVERSION)
         time.sleep(0.005)
-        msb = self._bus.read_byte_data(self._addr,
-                                       REG_PRESSURE + 0)
-        lsb = self._bus.read_byte_data(self._addr,
-                                       REG_PRESSURE + 1)
-        self._pressure = ((msb << 8 | lsb) & 0xffc0) >> 6
 
-        msb = self._bus.read_byte_data(self._addr,
-                                       REG_TEMPERATURE + 0)
-        lsb = self._bus.read_byte_data(self._addr,
-                                       REG_TEMPERATURE + 1)
-        self._temperature = ((msb << 8 | lsb) & 0xffc0) >> 6
+        pressure = self._bus.read_i2c_block_data(self._addr,
+                                                 REG_PRESSURE, 2)
+        self._pressure = (pressure[0] << 8 | pressure[1]) >> 6
+
+        temperature = self._bus.read_i2c_block_data(self._addr,
+                                                    REG_TEMPERATURE, 2)
+        self._temperature = (temperature[0] << 8 | temperature[1]) >> 6
 
     @property
     def pressure(self):
