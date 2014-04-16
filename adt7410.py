@@ -40,7 +40,7 @@ print sensor.temperature
 import time
 
 # Default I2C address
-DEFAULT_ADDRESS = 0x48
+_DEFAULT_ADDRESS = 0x48
 
 # Configuration parameters
 OP_MODE_CONTINUOUS = 0b00000000
@@ -51,11 +51,11 @@ RESOLUTION_13BITS  = 0b00000000
 RESOLUTION_16BITS  = 0b10000000
 
 # Registers
-REG_TEMPERATURE   = 0x00
-REG_CONFIGURATION = 0x03
+_REG_TEMPERATURE   = 0x00
+_REG_CONFIGURATION = 0x03
 
 class Adt7410(object):
-    def __init__(self, bus, addr = DEFAULT_ADDRESS,
+    def __init__(self, bus, addr = _DEFAULT_ADDRESS,
                  op_mode = OP_MODE_CONTINUOUS,
                  resolution = RESOLUTION_13BITS):
         '''
@@ -146,7 +146,7 @@ class Adt7410(object):
         self._cache_time = cache_time
 
     def _reconfigure(self):
-        self._bus.write_byte_data(self._addr, REG_CONFIGURATION,
+        self._bus.write_byte_data(self._addr, _REG_CONFIGURATION,
                                   (self._op_mode | self._resolution))
 
         # Wait at least 240ms to complete the initial conversion.
@@ -161,7 +161,7 @@ class Adt7410(object):
             self._last_updated = now
 
         vals = self._bus.read_i2c_block_data(self._addr,
-                                             REG_TEMPERATURE, 2)
+                                             _REG_TEMPERATURE, 2)
         raw = vals[0] << 8 | vals[1]
         temp = 0
         if (self._resolution == RESOLUTION_13BITS):

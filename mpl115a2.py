@@ -59,19 +59,19 @@ import struct
 import time
 
 # Default I2C address
-DEFAULT_ADDRESS = 0x60
+_DEFAULT_ADDRESS = 0x60
 
 # Registers
-REG_PRESSURE           = 0x00
-REG_TEMPERATURE        = 0x02
-REG_COEFFICIENT_OFFSET = 0x04
-REG_START_CONVERSION   = 0x12
+_REG_PRESSURE           = 0x00
+_REG_TEMPERATURE        = 0x02
+_REG_COEFFICIENT_OFFSET = 0x04
+_REG_START_CONVERSION   = 0x12
 
 # Commands
-CMD_START_CONVERSION   = 0x12
+_CMD_START_CONVERSION   = 0x12
 
 class Mpl115a2(object):
-    def __init__(self, bus, addr = DEFAULT_ADDRESS):
+    def __init__(self, bus, addr = _DEFAULT_ADDRESS):
         '''
         Initializes the sensor with some default values.
 
@@ -138,7 +138,7 @@ class Mpl115a2(object):
 
     def _read_coefficient_offset(self):
         coeff = self._bus.read_i2c_block_data(self._addr,
-                                              REG_COEFFICIENT_OFFSET, 8)
+                                              _REG_COEFFICIENT_OFFSET, 8)
         (a0, b1, b2, c12) = struct.unpack('>hhhh',
                                           ''.join([chr(x) for x in coeff]))
         self._a0 = float(a0) / (1 << 3)
@@ -155,16 +155,16 @@ class Mpl115a2(object):
             self._last_updated = now
 
         self._bus.write_byte_data(self._addr,
-                                  REG_START_CONVERSION,
-                                  CMD_START_CONVERSION)
+                                  _REG_START_CONVERSION,
+                                  _CMD_START_CONVERSION)
         # Wait at least 3ms to complete the conversion process.
         time.sleep(0.004)
 
         vals = self._bus.read_i2c_block_data(self._addr,
-                                             REG_PRESSURE, 2)
+                                             _REG_PRESSURE, 2)
         padc = (vals[0] << 8 | vals[1]) >> 6
         vals = self._bus.read_i2c_block_data(self._addr,
-                                             REG_TEMPERATURE, 2)
+                                             _REG_TEMPERATURE, 2)
         tadc = (vals[0] << 8 | vals[1]) >> 6
 
         '''
