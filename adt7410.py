@@ -37,6 +37,8 @@ sensor = adt7410.Adt7410(bus)
 print sensor.temperature
 '''
 
+import time
+
 # Default I2C address
 DEFAULT_ADDRESS = 0x48
 
@@ -144,3 +146,6 @@ class Adt7410(object):
     def _reconfigure(self):
         self._bus.write_byte_data(self._addr, REG_CONFIGURATION,
                                   (self._op_mode | self._resolution))
+
+        # Wait at least 240ms to complete the initial conversion.
+        time.sleep(0.03)
