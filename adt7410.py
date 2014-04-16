@@ -83,6 +83,9 @@ class Adt7410(object):
         self._addr = addr
         self._op_mode = op_mode
         self._resolution = resolution
+        self._cache_time = 0
+        self._last_updated = None
+        self._temperature = None
         self._reconfigure()
 
     @property
@@ -90,22 +93,8 @@ class Adt7410(object):
         '''
         Returns a temperature value.
         '''
-        vals = self._bus.read_i2c_block_data(self._addr,
-                                             REG_TEMPERATURE, 2)
-        raw = vals[0] << 8 | vals[1]
-        temp = 0
-        if (self._resolution == RESOLUTION_13BITS):
-            raw = raw >> 3
-            if (raw > 4095):
-                temp = (raw - 8192) / 16.0
-            else:
-                temp = raw / 16.0
-        else:
-            if (raw > 32767):
-                temp = (raw - 65536) / 128.0
-            else:
-                temp = raw / 128.0
-        return (temp)
+        self._update()
+        return (self._temperature)
 
     @property
     def op_mode(self):
@@ -143,9 +132,46 @@ class Adt7410(object):
         self._resolution = resolution
         self._reconfigure()
 
+    @property
+    def cache_time(self):
+        '''
+        Gets/Sets the cache time (in seconds).
+        '''
+        return (self._cache_time)
+    @cache_time.setter
+    def cache_time(self, cache_time):
+        assert(cache_time >= 0)
+
+        self._cache_time = cache_time
+
     def _reconfigure(self):
         self._bus.write_byte_data(self._addr, REG_CONFIGURATION,
                                   (self._op_mode | self._resolution))
 
         # Wait at least 240ms to complete the initial conversion.
         time.sleep(0.03)
+
+    def _update(self):
+        if self._cache_time > 0:
+            now = time.time()
+            if (self._last_updated is not None
+                and self._last_updated + self._cache_time > now):
+                return
+            self._last_updated = now
+
+        vals = self._bus.read_i2c_block_data(self._addr,
+                                             REG_TEMPERATURE, 2)
+        raw = vals[0] << 8 | vals[1]
+        temp = 0
+        if (self._resolution == RESOLUTION_13BITS):
+            raw = raw >> 3
+            if (raw > 4095):
+                temp = (raw - 8192) / 16.0
+            else:
+                temp = raw / 16.0
+        else:
+            if (raw > 32767):
+                temp = (raw - 65536) / 128.0
+            else:
+                temp = raw / 128.0
+        self._temperature = temp
