@@ -52,8 +52,7 @@ import mpl115a2
 
 bus = smbus.SMBus(1)
 sensor = mpl115a2.Mpl115a2(bus)
-sensor.update()
-print sensor.pressure, sensor.temperature
+print sensor.pressure_and_temperature
 '''
 
 import struct
@@ -86,6 +85,8 @@ class Mpl115a2(object):
         self._c12 = None
         self._pressure = None
         self._temperature = None
+        self._cache_time = 0
+        self._last_updated = None
         self._read_coefficient_offset()
 
     def _read_coefficient_offset(self):
@@ -98,27 +99,63 @@ class Mpl115a2(object):
         self._b2 = float(b2) / (1 << 14)
         self._c12 = float(c12 >> 2) / (1 << 22)
 
-    def update(self):
-        self._bus.write_byte_data(self._addr,
-                                  REG_START_CONVERSION,
-                                  CMD_START_CONVERSION)
-        time.sleep(0.005)
-
-        pressure = self._bus.read_i2c_block_data(self._addr,
-                                                 REG_PRESSURE, 2)
-        self._pressure = (pressure[0] << 8 | pressure[1]) >> 6
-
-        temperature = self._bus.read_i2c_block_data(self._addr,
-                                                    REG_TEMPERATURE, 2)
-        self._temperature = (temperature[0] << 8 | temperature[1]) >> 6
-
     @property
     def pressure(self):
-        pcomp = self._a0
-        pcomp += (self._b1 + self._c12 * self._temperature) * self._pressure
-        pcomp += self._b2 * self._temperature
-        return (((650.0 / 1023.0) * pcomp) + 500.0)
+        self._update()
+        return (self._pressure)
 
     @property
     def temperature(self):
-        return ((self._temperature - 498.0) / -5.35) + 25.0
+        self._update()
+        return (self._temperature)
+
+    @property
+    def pressure_and_temperature(self):
+        self._update()
+        return (self._pressure, self._temperature)
+
+    @property
+    def cache_time(self):
+        '''
+        Gets/Sets the cache time (in seconds).
+        '''
+        return (self._cache_time)
+    @cache_time.setter
+    def cache_time(self, cache_time):
+        assert(cache_time >= 0)
+
+        self._cache_time = cache_time
+
+    def _update(self):
+        if self._cache_time > 0:
+            now = time.time()
+            if (self._last_updated is not None
+                and self._last_updated + self._cache_time > now):
+                return
+            self._last_updated = now
+
+        self._bus.write_byte_data(self._addr,
+                                  REG_START_CONVERSION,
+                                  CMD_START_CONVERSION)
+        # Wait at least 3ms to complete the conversion process.
+        time.sleep(0.004)
+
+        vals = self._bus.read_i2c_block_data(self._addr,
+                                             REG_PRESSURE, 2)
+        padc = (vals[0] << 8 | vals[1]) >> 6
+        vals = self._bus.read_i2c_block_data(self._addr,
+                                             REG_TEMPERATURE, 2)
+        tadc = (vals[0] << 8 | vals[1]) >> 6
+
+        '''
+        c12x2 = self._c12 * tadc
+        a1 = self._b1 + c12x2
+        a1x1 = a1 * padc
+        y1 = self._a0 + a1x1
+        a2x2 = self._b2 * tadc
+        pcomp = y1 + a2x2
+        '''
+        pcomp = (self._a0 + (self._b1 + self._c12 * tadc) * padc
+                 + self._b2 * tadc)
+        self._pressure = ((650.0 / 1023.0) * pcomp) + 500.0
+        self._temperature = ((tadc - 498.0) / -5.35) + 25.0
