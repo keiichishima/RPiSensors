@@ -72,7 +72,13 @@ CMD_START_CONVERSION   = 0x12
 
 class Mpl115a2(object):
     def __init__(self, bus, addr = DEFAULT_ADDRESS):
+        '''
+        Initializes the sensor with some default values.
 
+        bus: The SMBus descriptor on which this sensor is attached.
+        addr: The I2C bus address
+            (default is 0x60).
+        '''
         assert (bus is not None)
         assert(addr > 0b0000111
                and addr < 0b1111000)
@@ -89,28 +95,32 @@ class Mpl115a2(object):
         self._last_updated = None
         self._read_coefficient_offset()
 
-    def _read_coefficient_offset(self):
-        coeff = self._bus.read_i2c_block_data(self._addr,
-                                              REG_COEFFICIENT_OFFSET, 8)
-        (a0, b1, b2, c12) = struct.unpack('>hhhh',
-                                          ''.join([chr(x) for x in coeff]))
-        self._a0 = float(a0) / (1 << 3)
-        self._b1 = float(b1) / (1 << 13)
-        self._b2 = float(b2) / (1 << 14)
-        self._c12 = float(c12 >> 2) / (1 << 22)
-
     @property
     def pressure(self):
+        '''
+        Returns a pressure value.  Returns None if no valid
+        value are set yet.
+        '''
         self._update()
         return (self._pressure)
 
     @property
     def temperature(self):
+        '''
+        Returns a temperature value.  Returns None if no valid
+        value are set yet.
+        '''
         self._update()
         return (self._temperature)
 
     @property
     def pressure_and_temperature(self):
+        '''
+        Returns pressure and temperature values as a tuple.  This
+        call can save 1 transaction than getting a pressure and
+        temperature values separetely.  Returns None if no valid
+        value are set yet.
+        '''
         self._update()
         return (self._pressure, self._temperature)
 
@@ -125,6 +135,16 @@ class Mpl115a2(object):
         assert(cache_time >= 0)
 
         self._cache_time = cache_time
+
+    def _read_coefficient_offset(self):
+        coeff = self._bus.read_i2c_block_data(self._addr,
+                                              REG_COEFFICIENT_OFFSET, 8)
+        (a0, b1, b2, c12) = struct.unpack('>hhhh',
+                                          ''.join([chr(x) for x in coeff]))
+        self._a0 = float(a0) / (1 << 3)
+        self._b1 = float(b1) / (1 << 13)
+        self._b2 = float(b2) / (1 << 14)
+        self._c12 = float(c12 >> 2) / (1 << 22)
 
     def _update(self):
         if self._cache_time > 0:
