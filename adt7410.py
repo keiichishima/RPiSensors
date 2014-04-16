@@ -52,7 +52,7 @@ RESOLUTION_16BITS  = 0b10000000
 REG_TEMPERATURE   = 0x00
 REG_CONFIGURATION = 0x03
 
-class Adt7410:
+class Adt7410(object):
     def __init__(self, bus, addr = DEFAULT_ADDRESS,
                  op_mode = OP_MODE_CONTINUOUS,
                  resolution = RESOLUTION_13BITS):
