@@ -71,7 +71,7 @@ REG_START_CONVERSION   = 0x12
 # Commands
 CMD_START_CONVERSION   = 0x12
 
-class Mpl115a2:
+class Mpl115a2(object):
     def __init__(self, bus, addr = DEFAULT_ADDRESS):
 
         assert (bus is not None)
