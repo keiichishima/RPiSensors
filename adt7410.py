@@ -92,7 +92,7 @@ class Adt7410(object):
     def temperature(self):
         '''
         Returns a temperature value.  Returns None if no valid
-        value are set yet.
+        value is set yet.
         '''
         self._update()
         return (self._temperature)

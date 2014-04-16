@@ -99,7 +99,7 @@ class Mpl115a2(object):
     def pressure(self):
         '''
         Returns a pressure value.  Returns None if no valid
-        value are set yet.
+        value is set yet.
         '''
         self._update()
         return (self._pressure)
@@ -108,7 +108,7 @@ class Mpl115a2(object):
     def temperature(self):
         '''
         Returns a temperature value.  Returns None if no valid
-        value are set yet.
+        value is set yet.
         '''
         self._update()
         return (self._temperature)
@@ -119,7 +119,7 @@ class Mpl115a2(object):
         Returns pressure and temperature values as a tuple.  This
         call can save 1 transaction than getting a pressure and
         temperature values separetely.  Returns None if no valid
-        value are set yet.
+        values are set yet.
         '''
         self._update()
         return (self._pressure, self._temperature)
