@@ -149,7 +149,7 @@ class Adt7410(object):
                                   (self._op_mode | self._resolution))
 
         # Wait at least 240ms to complete the initial conversion.
-        time.sleep(0.03)
+        time.sleep(0.3)
 
     def _update(self):
         if self._cache_time > 0:
