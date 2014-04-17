@@ -91,7 +91,7 @@ class Mpl115a2(object):
         self._c12 = None
         self._pressure = None
         self._temperature = None
-        self._cache_time = 0
+        self._cache_lifetime = 0
         self._last_updated = None
         self._read_coefficient_offset()
 
@@ -125,16 +125,16 @@ class Mpl115a2(object):
         return (self._pressure, self._temperature)
 
     @property
-    def cache_time(self):
+    def cache_lifetime(self):
         '''
         Gets/Sets the cache time (in seconds).
         '''
-        return (self._cache_time)
-    @cache_time.setter
-    def cache_time(self, cache_time):
-        assert(cache_time >= 0)
+        return (self._cache_lifetime)
+    @cache_lifetime.setter
+    def cache_lifetime(self, cache_lifetime):
+        assert(cache_lifetime >= 0)
 
-        self._cache_time = cache_time
+        self._cache_lifetime = cache_lifetime
 
     def _read_coefficient_offset(self):
         coeff = self._bus.read_i2c_block_data(self._addr,
@@ -147,10 +147,10 @@ class Mpl115a2(object):
         self._c12 = float(c12 >> 2) / (1 << 22)
 
     def _update(self):
-        if self._cache_time > 0:
+        if self._cache_lifetime > 0:
             now = time.time()
             if (self._last_updated is not None
-                and self._last_updated + self._cache_time > now):
+                and self._last_updated + self._cache_lifetime > now):
                 return
             self._last_updated = now
 
@@ -179,3 +179,17 @@ class Mpl115a2(object):
                  + self._b2 * tadc)
         self._pressure = ((650.0 / 1023.0) * pcomp) + 500.0
         self._temperature = ((tadc - 498.0) / -5.35) + 25.0
+
+if __name__ == '__main__':
+    import smbus
+
+    bus = smbus.SMBus(1)
+    sensor = Mpl115a2(bus)
+
+    for cache in (0, 5):
+        print '**********'
+	print 'Cache lifetime is %d' % cache
+        for c in range(10):
+            print sensor.pressure
+            print sensor.temperature
+            print sensor.pressure_and_temperature
