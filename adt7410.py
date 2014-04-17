@@ -83,7 +83,7 @@ class Adt7410(object):
         self._addr = addr
         self._op_mode = op_mode
         self._resolution = resolution
-        self._cache_time = 0
+        self._cache_lifetime = 0
         self._last_updated = None
         self._temperature = None
         self._reconfigure()
@@ -134,16 +134,16 @@ class Adt7410(object):
         self._reconfigure()
 
     @property
-    def cache_time(self):
+    def cache_lifetime(self):
         '''
         Gets/Sets the cache time (in seconds).
         '''
-        return (self._cache_time)
-    @cache_time.setter
-    def cache_time(self, cache_time):
-        assert(cache_time >= 0)
+        return (self._cache_lifetime)
+    @cache_lifetime.setter
+    def cache_lifetime(self, cache_lifetime):
+        assert(cache_lifetime >= 0)
 
-        self._cache_time = cache_time
+        self._cache_lifetime = cache_lifetime
 
     def _reconfigure(self):
         self._bus.write_byte_data(self._addr, _REG_CONFIGURATION,
@@ -153,10 +153,10 @@ class Adt7410(object):
         time.sleep(0.3)
 
     def _update(self):
-        if self._cache_time > 0:
+        if self._cache_lifetime > 0:
             now = time.time()
             if (self._last_updated is not None
-                and self._last_updated + self._cache_time > now):
+                and self._last_updated + self._cache_lifetime > now):
                 return
             self._last_updated = now
 
@@ -176,3 +176,16 @@ class Adt7410(object):
             else:
                 temp = raw / 128.0
         self._temperature = temp
+
+if __name__ == '__main__':
+    import smbus
+
+    bus = smbus.SMBus(1)
+    sensor = Adt7410(bus)
+    for cache in [0, 10]:
+        sensor.cache_lifetime = cache
+        for op_mode in [OP_MODE_CONTINUOUS, OP_MODE_ONESHOT, OP_MODE_1SPS]:
+            sensor.op_mode = op_mode
+            for res in [RESOLUTION_13BITS, RESOLUTION_16BITS]:
+                sensor.resolution = res
+                print sensor.temperature
