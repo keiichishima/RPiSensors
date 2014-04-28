@@ -50,9 +50,17 @@
 provided by Switch-Science as a part no. SFE-SEN-12055.  The smbus
 module is required.
 
+Example:
+
+import smbus
+import tsl2561
+
+bus = smbus.SMBus(1)
+sensor = tsl2561.Tsl2561(bus)
+print sensor.lux
 '''
 
-from sensor import SensorBase
+import sensorbase
 import time
 
 # Default I2C address
@@ -88,7 +96,7 @@ _INTEGRATE_402     = 0b00000010
 _INTEGRATE_DEFAULT = _INTEGRATE_402
 _INTEGRATE_NA      = 0b00000011
 
-class Tsl2561(SensorBase):
+class Tsl2561(sensorbase.SensorBase):
     def __init__(self, bus, addr = _DEFAULT_ADDRESS):
         assert(bus is not None)
         assert(addr > 0b000111
