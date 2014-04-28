@@ -61,6 +61,7 @@ sensor = adt7410.Adt7410(bus)
 print sensor.temperature
 '''
 
+import sensorbase
 import time
 
 # Default I2C address
@@ -78,7 +79,7 @@ RESOLUTION_16BITS  = 0b10000000
 _REG_TEMPERATURE   = 0x00
 _REG_CONFIGURATION = 0x03
 
-class Adt7410(object):
+class Adt7410(sensorbase.SensorBase):
     def __init__(self, bus, addr = _DEFAULT_ADDRESS,
                  op_mode = OP_MODE_CONTINUOUS,
                  resolution = RESOLUTION_13BITS):
@@ -103,13 +104,15 @@ class Adt7410(object):
         assert(resolution == RESOLUTION_13BITS
                or resolution == RESOLUTION_16BITS)
 
+        super(Adt7410, self).__init__(self._update_sensor_data)
+
         self._bus = bus
         self._addr = addr
         self._op_mode = op_mode
         self._resolution = resolution
-        self._cache_lifetime = 0
-        self._last_updated = None
+
         self._temperature = None
+
         self._reconfigure()
 
     @property
@@ -132,6 +135,7 @@ class Adt7410(object):
         OP_MODE_SHUTDOWN: Shutdown mode.
         '''
         return (self._op_mode)
+
     @op_mode.setter
     def op_mode(self, op_mode):
         assert(op_mode == OP_MODE_CONTINUOUS
@@ -150,24 +154,13 @@ class Adt7410(object):
         RESOLUTION_16BITS: 16 bits mode.
         '''
         return (self._resolution)
+
     @resolution.setter
     def resolution(self, resolution):
         assert(resolution == RESOLUTION_13BITS
                or resolution == RESOLUTION_16BITS)
         self._resolution = resolution
         self._reconfigure()
-
-    @property
-    def cache_lifetime(self):
-        '''
-        Gets/Sets the cache time (in seconds).
-        '''
-        return (self._cache_lifetime)
-    @cache_lifetime.setter
-    def cache_lifetime(self, cache_lifetime):
-        assert(cache_lifetime >= 0)
-
-        self._cache_lifetime = cache_lifetime
 
     def _reconfigure(self):
         self._bus.write_byte_data(self._addr, _REG_CONFIGURATION,
@@ -176,14 +169,7 @@ class Adt7410(object):
         # Wait at least 240ms to complete the initial conversion.
         time.sleep(0.3)
 
-    def _update(self):
-        if self._cache_lifetime > 0:
-            now = time.time()
-            if (self._last_updated is not None
-                and self._last_updated + self._cache_lifetime > now):
-                return
-            self._last_updated = now
-
+    def _update_sensor_data(self):
         vals = self._bus.read_i2c_block_data(self._addr,
                                              _REG_TEMPERATURE, 2)
         raw = vals[0] << 8 | vals[1]

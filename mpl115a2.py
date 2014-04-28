@@ -79,6 +79,7 @@ sensor = mpl115a2.Mpl115a2(bus)
 print sensor.pressure_and_temperature
 '''
 
+import sensorbase
 import struct
 import time
 
@@ -94,7 +95,7 @@ _REG_START_CONVERSION   = 0x12
 # Commands
 _CMD_START_CONVERSION   = 0x12
 
-class Mpl115a2(object):
+class Mpl115a2(sensorbase.SensorBase):
     def __init__(self, bus, addr = _DEFAULT_ADDRESS):
         '''
         Initializes the sensor with some default values.
@@ -107,16 +108,18 @@ class Mpl115a2(object):
         assert(addr > 0b0000111
                and addr < 0b1111000)
 
+        super(Mpl115a2, self).__init__(self._update_sensor_data)
+
         self._bus = bus
         self._addr = addr
+
         self._a0 = None
         self._b1 = None
         self._b2 = None
         self._c12 = None
         self._pressure = None
         self._temperature = None
-        self._cache_lifetime = 0
-        self._last_updated = None
+
         self._read_coefficient_offset()
 
     @property
@@ -142,23 +145,11 @@ class Mpl115a2(object):
         '''
         Returns pressure and temperature values as a tuple.  This
         call can save 1 transaction than getting a pressure and
-        temperature values separetely.  Returns None if no valid
-        values are set yet.
+        temperature values separetely.  Returns (None, None) if
+        no valid values are set yet.
         '''
         self._update()
         return (self._pressure, self._temperature)
-
-    @property
-    def cache_lifetime(self):
-        '''
-        Gets/Sets the cache time (in seconds).
-        '''
-        return (self._cache_lifetime)
-    @cache_lifetime.setter
-    def cache_lifetime(self, cache_lifetime):
-        assert(cache_lifetime >= 0)
-
-        self._cache_lifetime = cache_lifetime
 
     def _read_coefficient_offset(self):
         coeff = self._bus.read_i2c_block_data(self._addr,
@@ -170,14 +161,7 @@ class Mpl115a2(object):
         self._b2 = float(b2) / (1 << 14)
         self._c12 = float(c12 >> 2) / (1 << 22)
 
-    def _update(self):
-        if self._cache_lifetime > 0:
-            now = time.time()
-            if (self._last_updated is not None
-                and self._last_updated + self._cache_lifetime > now):
-                return
-            self._last_updated = now
-
+    def _update_sensor_data(self):
         self._bus.write_byte_data(self._addr,
                                   _REG_START_CONVERSION,
                                   _CMD_START_CONVERSION)
@@ -212,7 +196,8 @@ if __name__ == '__main__':
 
     for cache in (0, 5):
         print '**********'
-	print 'Cache lifetime is %d' % cache
+        print 'Cache lifetime is %d' % cache
+        sensor.cache_lifetime = cache
         for c in range(10):
             print sensor.pressure
             print sensor.temperature

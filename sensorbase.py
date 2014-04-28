@@ -59,7 +59,7 @@ class SensorBase(object):
         now = time.time()
 
         # If caching is disabled, just update the data.
-        if self._cache_lifetime == 0:
+        if self._cache_lifetime > 0:
             # Check if the cached value is still valid or not.
             if (self._last_updated is not None
                 and self._last_updated + self._cache_lifetime > now):
