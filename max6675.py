@@ -59,10 +59,11 @@ sensor = max6675.Max6675(0, 0)
 print sensor.temperature
 '''
 
+import sensorbase
 import spidev
 import time
 
-class Max6675(object):
+class Max6675(sensorbase.SensorBase):
     def __init__(self, bus, client):
         '''
         Initializes the sensor.
@@ -73,11 +74,13 @@ class Max6675(object):
         assert(bus is not None)
         assert(client is not None)
 
+        super(Max6675, self).__init__(self._update_sensor_data)
+
         self._bus = bus
         self._client = client
+
         self._temperature = None
-        self._cache_lifetime = 0
-        self._last_updated = None
+
         self._handle = spidev.SpiDev(self._bus, self._client)
 
     def __del__(self):
@@ -93,26 +96,7 @@ class Max6675(object):
         self._update()
         return (self._temperature)
 
-    @property
-    def cache_lifetime(self):
-        '''
-        Gets/Sets the cache time (in seconds).
-        '''
-        return (self._cache_lifetime)
-    @cache_lifetime.setter
-    def cache_lifetime(self, cache_lifetime):
-        assert(cache_lifetime >= 0)
-
-        self._cache_lifetime = cache_lifetime
-
-    def _update(self):
-        if self._cache_lifetime > 0:
-            now = time.time()
-            if (self._last_updated is not None
-                and self._last_updated + self._cache_lifetime > now):
-                return
-            self._last_updated = now
-
+    def _update_sensor_data(self):
         vals = self._handle.readbytes(2)
         self._temperature = ((vals[0] << 8 | vals[1]) >> 3) * 0.25
 
