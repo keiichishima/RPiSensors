@@ -149,6 +149,26 @@ class Bmp180(sensorbase.SensorBase):
         self._update()
         return (self._pressure, self._temperature)
 
+    @property
+    def os_mode(self):
+        '''
+        Gets/Sets oversampling mode.
+
+        OS_MODE_SINGLE: Single mode.
+        OS_MODE_2: 2 times.
+        OS_MODE_4: 4 times.
+        OS_MODE_8: 8 times.
+        '''
+        return (self._os_mode)
+
+    @os_mode.setter
+    def os_mode(self, os_mode):
+        assert(os_mode == OS_MODE_SINGLE
+               or os_mode == OS_MODE_2
+               or os_mode == OS_MODE_4
+               or os_mode == OS_MODE_8)
+        self._os_mode = os_mode
+
     def _read_calibration_data(self):
         calib = self._bus.read_i2c_block_data(self._addr,
                                               _REG_CALIB_OFFSET, 22)
@@ -174,33 +194,41 @@ class Bmp180(sensorbase.SensorBase):
                                              _REG_DATA, 3)
         up = (vals[0] << 16 | vals[1] << 8 | vals[0]) >> (8 - self._os_mode)
 
-        x1 = (ut - self._ac6) * self._ac5 / 2**15
-        x2 = self._mc * 2**11 / (x1 + self._md)
+        x1 = ((ut - self._ac6) * self._ac5) >> 15
+        x2 = (self._mc << 11) / (x1 + self._md)
         b5 = x1 + x2
         self._temperature = ((b5 + 8) / 2**4) / 10.0
 
         b6 = b5 - 4000
-        x1 = (self._b2 * (b6 * b6 / 2**12)) / 2**11
-        x2 = self._ac2 * b6 / 2**11
-        x3 = x1 + x2
-        b3 = (((self._ac1 *4 + x3) << self._os_mode) + 2) / 4
-        x1 = self._ac3 * b6 / 2**13
-        x2 = (self._b1 * (b6 * b6 / 2**12)) / 2**18
-        x3 = ((x1 + x2) + 2) / 2**2
-        b4 = self._ac4 * (x3 + 32768) / 2**15
+        x1 = self._b2 * ((b6 * b6) >> 12)
+        x2 = self._ac2 * b6
+        x3 = (x1 + x2) >> 11
+        b3 = (((self._ac1 *4 + x3) << self._os_mode) + 2) >> 2
+        x1 = (self._ac3 * b6) >> 13
+        x2 = (self._b1 * (b6 * b6) >> 12) >> 16
+        x3 = ((x1 + x2) + 2) >> 2
+        b4 = (self._ac4 * (x3 + 32768)) >> 15
         b7 = (up - b3) * (50000 >> self._os_mode)
         if (b7 < 0x80000000):
             p = (b7 * 2) / b4
         else:
             p = (b7 / b4) * 2
-        x1 = (p / 2**8) * (p / 2**8)
-        x1 = (x1 * 3038) / 2**18
-        x2 = (-7357 * p) / 2**16
-        self._pressure = (p + (x1 + x2 + 3791) / 2**4) / 100.0
+        x1 = p**2 >> 16
+        x1 = (x1 * 3038) >> 16
+        x2 = (-7357 * p) >> 16
+        self._pressure = (p + ((x1 + x2 + 3791) >> 4)) / 100.0
 
 if __name__ == '__main__':
     import smbus
 
     bus = smbus.SMBus(1)
     sensor = Bmp180(bus)
-    print sensor.pressure_and_temperature
+    for cache in [0, 5]:
+        print '**********'
+        print 'Cache lifetime is %d' % cache
+        sensor.cache_lifetime = cache
+        for mode in [OS_MODE_SINGLE, OS_MODE_2, OS_MODE_4, OS_MODE_8]:
+            sensor.os_mode = mode
+            print 'Oversampling mode is %d' % mode
+            for c in range(10):
+                print sensor.pressure_and_temperature
