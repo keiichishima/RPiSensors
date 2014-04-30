@@ -98,6 +98,13 @@ _INTEGRATE_NA      = 0b00000011
 
 class Tsl2561(sensorbase.SensorBase):
     def __init__(self, bus, addr = _DEFAULT_ADDRESS):
+        '''
+        Initializes the sensor with some default values.
+
+        bus: The SMBus descriptor on which this sensor is attached.
+        addr: The I2C bus address
+            (default is 0x39).
+        '''
         assert(bus is not None)
         assert(addr > 0b000111
                and addr < 0b1111000)
@@ -120,6 +127,10 @@ class Tsl2561(sensorbase.SensorBase):
 
     @property
     def lux(self):
+        '''
+        Returns a lux value.  Returns None if no valid value
+        is set yet.
+        '''
         self._update()
         return (self._lux)
 

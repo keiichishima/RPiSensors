@@ -50,6 +50,14 @@
 by Switch-Science as a part no. SFE-SEN-11824.  The smbus module is
 required.
 
+Example:
+
+import smbus
+import bmp180
+
+bus = smbus.SMBus(1)
+sensor = bmp180.Bmp180(bus)
+print sensor.pressure_and_temperature
 '''
 
 import sensorbase
