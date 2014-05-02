@@ -158,6 +158,10 @@ class Tsl2561(sensorbase.SensorBase):
         #         Libraries/SFE_TSL2561/SFE_TSL2561.cpp
         d0 = float(self._channel0)
         d1 = float(self._channel1)
+        if (d0 == 0):
+            # Sometimes, the channel0 returns 0 when dark...
+            lux = 0.0
+            return
         ratio = d1 / d0
 
         integ_scale = 1
@@ -175,7 +179,7 @@ class Tsl2561(sensorbase.SensorBase):
             d1 = d1 / 16
 
         if (ratio < 0.5):
-            self._lux = 0.0304 * d0 - 0.062 * d0 * ratio ** 1.4
+            self._lux = 0.0304 * d0 - 0.062 * d0 * (ratio ** 1.4)
         elif (ratio < 0.61):
             self._lux = 0.0224 * d0 - 0.031 * d1
         elif (ratio < 0.80):
