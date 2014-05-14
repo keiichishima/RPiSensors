@@ -49,6 +49,12 @@
 '''A Python class to access HTU21D based relative humidity sensor
 provided by SWITCHSCIENCE as a part no. SFE-SEN-12055.
 
+Example:
+
+bus = 1
+sensor = htu21d.Htu21d(bus)
+print sensor.humidity
+
 '''
 
 import fcntl
@@ -71,17 +77,17 @@ RESOLUTION_10BITS      = 0b10000000
 RESOLUTION_11BITS      = 0b10000001
 # _END_OF_BATTERY        = 0b01000000
 # _ENABLE_ONCHIP_HEATER  = 0b00000100
-# _DISABLE_ONCHIP_HEATER = 0b00000000
-# _ENABLE_OTP_RELOAD     = 0b00000000
-# _DISABLE_OTP_RELOAD    = 0b00000010
+_DISABLE_ONCHIP_HEATER = 0b00000000
+_ENABLE_OTP_RELOAD     = 0b00000000
+_DISABLE_OTP_RELOAD    = 0b00000010
 _RESERVED_BITMASK      = 0b00111000
 
-# Registers
-_REG_TEMPERATURE  = '\xF3'
-_REG_HUMIDITY     = '\xF5'
-_REG_WRITE_CONFIG = '\xE6'
-_REG_READ_CONFIG  = '\xE7'
-_REG_SOFT_RESET   = '\xFE'
+# Commands
+_CMD_TEMPERATURE  = '\xF3'
+_CMD_HUMIDITY     = '\xF5'
+_CMD_WRITE_CONFIG = '\xE6'
+_CMD_READ_CONFIG  = '\xE7'
+_CMD_SOFT_RESET   = '\xFE'
 
 # Data bits specification
 _STATUS_BITMASK     = 0b00000011
@@ -90,9 +96,9 @@ _STATUS_HUMIDITY    = 0b00000010
 _STATUS_LSBMASK     = 0b11111100
 
 class Htu21d(sensorbase.SensorBase):
-    def __init__(self, bus=None, addr=_DEFAULT_ADDRESS,
-                 resolution=RESOLUTION_12BITS,
-                 use_temperature=False):
+    def __init__(self, bus = None, addr = _DEFAULT_ADDRESS,
+                 resolution = RESOLUTION_12BITS,
+                 use_temperature = False):
         '''Initializes the sensor with some default values.
 
         bus: The SMBus descriptor on which this sensor is attached.
@@ -182,29 +188,29 @@ class Htu21d(sensorbase.SensorBase):
         self._reconfigure()
 
     def _reset(self):
-        self._iow.write(_REG_SOFT_RESET)
+        self._iow.write(_CMD_SOFT_RESET)
         time.sleep(0.02)
 
     def _reconfigure(self):
-        self._iow.write(_REG_READ_CONFIG)
+        self._iow.write(_CMD_READ_CONFIG)
         configs = self._ior.read(1)
         (config,) = struct.unpack('B', configs)
         config = ((config & _RESERVED_BITMASK)
                   | self._resolution
                   | self._onchip_heater
                   | self._otp_reload)
-        self._iow.write(_REG_WRITE_CONFIG + struct.pack('B', config))
+        self._iow.write(_CMD_WRITE_CONFIG + struct.pack('B', config))
 
     def _update_sensor_data(self):
         if self._use_temperature is True:
-            self._iow.write(_REG_TEMPERATURE)
+            self._iow.write(_CMD_TEMPERATURE)
             time.sleep(0.05)
             vals = self._ior.read(3)
             (temphigh, templow, crc) = struct.unpack('BBB', vals)
             temp = (temphigh << 8) | (templow & _STATUS_LSBMASK)
             self._temperature = -46.85 + (175.72 * temp) / 2**16
 
-        self._iow.write(_REG_HUMIDITY)
+        self._iow.write(_CMD_HUMIDITY)
         time.sleep(0.02)
         vals = self._ior.read(3)
         (humidhigh, humidlow, crc) = struct.unpack('BBB', vals)
