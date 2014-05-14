@@ -99,7 +99,8 @@ _WAIT_TEMPERATURE = 0.0045
 _WAIT_PRESSURE    = [0.0045, 0.0075, 0.0135, 0.0255]
 
 class Bmp180(sensorbase.SensorBase):
-    def __init__(self, bus, addr = _DEFAULT_ADDRESS):
+    def __init__(self, bus = None, addr = _DEFAULT_ADDRESS,
+                 os_mode = OS_MODE_SINGLE):
         assert(bus is not None)
         assert(addr > 0b000111
                and addr < 0b1111000)
@@ -122,7 +123,7 @@ class Bmp180(sensorbase.SensorBase):
         self._mb = None
         self._mc = None
         self._md = None
-        self._os_mode = OS_MODE_SINGLE
+        self._os_mode = os_mode
         self._pressure = None
         self._temperature = None
 
@@ -130,42 +131,42 @@ class Bmp180(sensorbase.SensorBase):
 
     @property
     def pressure(self):
-        '''
-        Returns a pressure value.  Returns None if no valid
-        value is set yet.
+        '''Returns a pressure value.  Returns None if no valid value is set
+        yet.
+
         '''
         self._update()
         return (self._pressure)
 
     @property
     def temperature(self):
-        '''
-        Returns a temperature value.  Returns None if no valid
-        value is set yet.
+        '''Returns a temperature value.  Returns None if no valid value is
+        set yet.
+
         '''
         self._update()
         return (self._temperature)
 
     @property
     def pressure_and_temperature(self):
-        '''
-        Returns pressure and temperature values as a tuple.  This
-        call can save 1 transaction than getting a pressure and
-        temperature values separetely.  Returns (None, None) if
-        no valid values are set yet.
+        '''Returns pressure and temperature values as a tuple.  This call can
+        save 1 transaction than getting a pressure and temperature
+        values separetely.  Returns (None, None) if no valid values
+        are set yet.
+
         '''
         self._update()
         return (self._pressure, self._temperature)
 
     @property
     def os_mode(self):
-        '''
-        Gets/Sets oversampling mode.
+        '''Gets/Sets oversampling mode.
 
         OS_MODE_SINGLE: Single mode.
         OS_MODE_2: 2 times.
         OS_MODE_4: 4 times.
         OS_MODE_8: 8 times.
+
         '''
         return (self._os_mode)
 

@@ -63,11 +63,10 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
-'''
-A Python class to access MPL115A2 based air pressure sensor provided by
-AKIZUKI DENSHI TSUSHO CO., LTD. as a part no. I-04596.  The smbus module
-is required.  This class is derived from Yojiro Uo's original code
-published at https://gist.github.com/yojiro/6995427.
+'''A Python class to access MPL115A2 based air pressure sensor
+provided by AKIZUKI DENSHI TSUSHO CO., LTD. as a part no. I-04596.
+The smbus module is required.  This class is derived from Yojiro Uo's
+original code published at https://gist.github.com/yojiro/6995427.
 
 Example:
 
@@ -77,6 +76,7 @@ import mpl115a2
 bus = smbus.SMBus(1)
 sensor = mpl115a2.Mpl115a2(bus)
 print sensor.pressure_and_temperature
+
 '''
 
 import sensorbase
@@ -96,13 +96,13 @@ _REG_START_CONVERSION   = 0x12
 _CMD_START_CONVERSION   = 0x12
 
 class Mpl115a2(sensorbase.SensorBase):
-    def __init__(self, bus, addr = _DEFAULT_ADDRESS):
-        '''
-        Initializes the sensor with some default values.
+    def __init__(self, bus = None, addr = _DEFAULT_ADDRESS):
+        '''Initializes the sensor with some default values.
 
         bus: The SMBus descriptor on which this sensor is attached.
         addr: The I2C bus address
             (default is 0x60).
+
         '''
         assert (bus is not None)
         assert(addr > 0b0000111
@@ -124,29 +124,29 @@ class Mpl115a2(sensorbase.SensorBase):
 
     @property
     def pressure(self):
-        '''
-        Returns a pressure value.  Returns None if no valid
-        value is set yet.
+        '''Returns a pressure value.  Returns None if no valid value is set
+        yet.
+
         '''
         self._update()
         return (self._pressure)
 
     @property
     def temperature(self):
-        '''
-        Returns a temperature value.  Returns None if no valid
-        value is set yet.
+        '''Returns a temperature value.  Returns None if no valid value is
+        set yet.
+
         '''
         self._update()
         return (self._temperature)
 
     @property
     def pressure_and_temperature(self):
-        '''
-        Returns pressure and temperature values as a tuple.  This
-        call can save 1 transaction than getting a pressure and
-        temperature values separetely.  Returns (None, None) if
-        no valid values are set yet.
+        '''Returns pressure and temperature values as a tuple.  This call can
+        save 1 transaction than getting a pressure and temperature
+        values separetely.  Returns (None, None) if no valid values
+        are set yet.
+
         '''
         self._update()
         return (self._pressure, self._temperature)

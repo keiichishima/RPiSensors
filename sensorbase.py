@@ -77,8 +77,8 @@ class SensorBase(object):
 
     @property
     def cache_lifetime(self):
-        '''
-        Gets/Sets the cache time (in seconds).
+        '''Gets/Sets the cache time (in seconds).
+
         '''
         return (self._cache_lifetime)
 

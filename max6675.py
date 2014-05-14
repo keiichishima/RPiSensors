@@ -46,9 +46,8 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
-A Python class to access MAX6675 based temperature sensor.  The spidev
-module (https://github.com/doceme/py-spidev) is required.
+'''A Python class to access MAX6675 based temperature sensor.  The
+spidev module (https://github.com/doceme/py-spidev) is required.
 
 Example:
 
@@ -57,6 +56,7 @@ import max6675
 
 sensor = max6675.Max6675(0, 0)
 print sensor.temperature
+
 '''
 
 import sensorbase
@@ -64,12 +64,12 @@ import spidev
 import time
 
 class Max6675(sensorbase.SensorBase):
-    def __init__(self, bus, client):
-        '''
-        Initializes the sensor.
+    def __init__(self, bus = None, client = None):
+        '''Initializes the sensor.
 
         bus: The SPI bus.
         client: The identifier of the client.
+
         '''
         assert(bus is not None)
         assert(client is not None)
@@ -89,9 +89,9 @@ class Max6675(sensorbase.SensorBase):
 
     @property
     def temperature(self):
-        '''
-        Returns a temperature value.  Returns None if no valid
-        value is set yet.
+        '''Returns a temperature value.  Returns None if no valid value is
+        set yet.
+
         '''
         self._update()
         return (self._temperature)

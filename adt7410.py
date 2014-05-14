@@ -46,10 +46,9 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
-A Python class to access ADT7410 based temperature sensor provided by
-AKIZUKI DENSHI TSUSHO CO., LTD. as a part no. M-06675.  The smbus module
-is required.
+'''A Python class to access ADT7410 based temperature sensor provided
+by AKIZUKI DENSHI TSUSHO CO., LTD. as a part no. M-06675.  The smbus
+module is required.
 
 Example:
 
@@ -59,10 +58,12 @@ import adt7410
 bus = smbus.SMBus(1)
 sensor = adt7410.Adt7410(bus)
 print sensor.temperature
+
 '''
 
-import sensorbase
 import time
+
+import sensorbase
 
 # Default I2C address
 _DEFAULT_ADDRESS = 0x48
@@ -80,11 +81,10 @@ _REG_TEMPERATURE   = 0x00
 _REG_CONFIGURATION = 0x03
 
 class Adt7410(sensorbase.SensorBase):
-    def __init__(self, bus, addr = _DEFAULT_ADDRESS,
+    def __init__(self, bus = None, addr = _DEFAULT_ADDRESS,
                  op_mode = OP_MODE_CONTINUOUS,
                  resolution = RESOLUTION_13BITS):
-        '''
-        Initializes the sensor with some default values.
+        '''Initializes the sensor with some default values.
 
         bus: The SMBus descriptor on which this sensor is attached.
         addr: The I2C bus address
@@ -93,6 +93,7 @@ class Adt7410(sensorbase.SensorBase):
             (default is OP_MODE_CONTINUOUS).
         resolution: The resolution of the temperature value
             (default is RESOLUTION_13BITS).
+
         '''
         assert(bus is not None)
         assert(addr > 0b0000111
@@ -117,22 +118,22 @@ class Adt7410(sensorbase.SensorBase):
 
     @property
     def temperature(self):
-        '''
-        Returns a temperature value.  Returns None if no valid
-        value is set yet.
+        '''Returns a temperature value.  Returns None if no valid value is
+        set yet.
+
         '''
         self._update()
         return (self._temperature)
 
     @property
     def op_mode(self):
-        '''
-        Gets/Sets current operation mode.
+        '''Gets/Sets current operation mode.
 
         OP_MODE_CONTINUOUS: Continuous conversion.
         OP_MODE_ONESHOT: One shot.
         OP_MODE_1SPS: 1 SPS mode.
         OP_MODE_SHUTDOWN: Shutdown mode.
+
         '''
         return (self._op_mode)
 
@@ -147,11 +148,11 @@ class Adt7410(sensorbase.SensorBase):
 
     @property
     def resolution(self):
-        '''
-        Gets/Sets the resolution of temperature value.
+        '''Gets/Sets the resolution of temperature value.
 
         RESOLUTION_13BITS: 13 bits mode.
         RESOLUTION_16BITS: 16 bits mode.
+
         '''
         return (self._resolution)
 
