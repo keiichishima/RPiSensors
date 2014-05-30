@@ -47,7 +47,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''A Python class to access HTU21D based relative humidity sensor
-provided by SWITCHSCIENCE as a part no. SFE-SEN-12055.
+provided by SWITCHSCIENCE as a part no. SFE-SEN-12064.
 
 Example:
 
